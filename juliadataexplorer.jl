@@ -31,27 +31,55 @@ data = CSV.File(datafile,
 
 #### Frontend
 loadfile = filepicker();
-function loadfilepage(req)
+function loadfilepageold(req)
     page = node(
-                :div,
-                node(:h1, "Upload Data"),
-                node(:br),
-                node(:p, loadfile)
+    :container,
+    node(:h1, "Upload Data"),
+    node(:br),
+    node(:p, loadfile)
     )
     return page
 end
+
+navbar = vbox(
+                hbox(
+                    node(:a, pad(1em, "Home"),
+                                attributes=Dict(:href=>"..")),
+                    node(:a, pad(1em, "Upload"),
+                                attributes=Dict(:href=>"../upload")),
+                    node(:a, pad(1em, "Table View"),
+                                attributes=Dict(:href=>"../table")),
+                    node(:a, pad(1em, "Explore"),
+                                attributes=Dict(:href=>"../explore"))
+                    ),
+                hline()
+                )
+
+landingpage = vbox(
+                navbar,
+                node(:h1, "Landing Page")
+                )
+
+                loadfilepage = vbox(
+                navbar,
+                loadfile
+                )
+
+tablepage = vbox(
+                navbar,
+                showtable(data))
+
 @app julex = (
             Mux.defaults,
-            page(respond("<h1>Landing Page</h1>")),
+            page(landingpage),
             page("/upload",
-                req -> loadfilepage(req)),
-            page("/upload2",
-                respond("<h1>Data Upload Page</h1>"),
-                req->loadfile),
-            page("/about",
-                respond("<h1>About Page</h1>")),
+                loadfilepage
+                ),
             page("/table",
-                respond(showtable(data))),
+                tablepage
+                ),
+            page("/explore",
+                respond("nothing here yet")),
             Mux.notfound())
 settheme!(:nativehtml)
 
