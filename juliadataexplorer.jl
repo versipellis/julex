@@ -1,11 +1,12 @@
 #### Packages Loading
 using CSV
-using WebIO, TableView
 using DataFrames
+using WebIO, Mux, Interact
+using TableView
 
 #### Data Loading
 filedirs = String[]
-for (root, dirs, files) in walkdir(pwd()*"/testcode/datasets/")
+for (root, dirs, files) in walkdir(pwd()*"/datasets/")
     for file in files
         #println(joinpath(root,file))
         push!(filedirs,joinpath(root,file))
@@ -25,5 +26,33 @@ data = CSV.File(datafile,
                 # Column Type Options
                 )
 
-testDF = data |> DataFrame
-showtable(data)
+#testDF = data |> DataFrame
+#showtable(data)
+
+#### Frontend
+loadfile = filepicker();
+function loadfilepage(req)
+    page = node(
+                :div,
+                node(:h1, "Upload Data"),
+                node(:br),
+                node(:p, loadfile)
+    )
+    return page
+end
+@app julex = (
+            Mux.defaults,
+            page(respond("<h1>Landing Page</h1>")),
+            page("/upload",
+                req -> loadfilepage(req)),
+            page("/upload2",
+                respond("<h1>Data Upload Page</h1>"),
+                req->loadfile),
+            page("/about",
+                respond("<h1>About Page</h1>")),
+            page("/table",
+                respond(showtable(data))),
+            Mux.notfound())
+settheme!(:nativehtml)
+
+serve(julex)
