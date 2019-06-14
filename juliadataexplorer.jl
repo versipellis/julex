@@ -18,28 +18,33 @@ datafile = filedirs[2]
 #### Code
 
 data = CSV.File(datafile,
-                # File Layout Options
+                ## File Layout Options
                 header = 1:2, # Int for row to parse for col names, or range for a span of rows to be concat for col names
                 normalizenames = true, # Normalize col names to Julia-sane symbols
-                delim = ',' # Char or String which indicates a delimiter, if none provided, will detect the most consistent one after first 10 rows
-                # Parsing Options
-                # Column Type Options
+                delim = ',', # Char or String which indicates a delimiter, if none provided, will detect the most consistent one after first 10 rows
+                ## Parsing Options
+                #missingstring = "\"\""
+                ## Column Type Options
                 )
 
 #testDF = data |> DataFrame
 #showtable(data)
 
+data = CSV.read(datafile)
+
 #### Frontend
-loadfile = filepicker();
-function loadfilepageold(req)
-    page = node(
-    :container,
-    node(:h1, "Upload Data"),
-    node(:br),
-    node(:p, loadfile)
-    )
-    return page
-end
+loadfilebutton = filepicker(label="Choose a CSV file...",
+                        accept=".csv");
+#datafile = Observable{Any}(DataFrame)
+#map!(CSV.read, datafile, loadfilebutton)
+
+showtablegenerate = button("Generate showtable")
+showtableresults = Observable{Any}(dom"div"())
+map!(showtable, showtableresults, data)
+on(n -> println("Hello!"), showtablegenerate)
+
+describegenerate = button("Generate describe")
+describeresults = Observable{Any}(dom"div"())
 
 navbar = vbox(
                 hbox(
@@ -50,9 +55,9 @@ navbar = vbox(
                     node(:a, pad(1em, "Table View"),
                                 attributes=Dict(:href=>"../table")),
                     node(:a, pad(1em, "Explore"),
-                                attributes=Dict(:href=>"../explore"))
+                                attributes=Dict(:href=>"../explore/describe"))
                     ),
-                hline()
+                pad(1em, hline())
                 )
 
 landingpage = vbox(
@@ -60,14 +65,52 @@ landingpage = vbox(
                 node(:h1, "Landing Page")
                 )
 
-                loadfilepage = vbox(
+
+loadfilepage = vbox(
                 navbar,
-                loadfile
+                loadfilebutton,
+                showtablegenerate, #debug
+                showtableresults #debug
                 )
 
 tablepage = vbox(
                 navbar,
-                showtable(data))
+                showtablegenerate,
+                showtableresults
+                )
+
+explorepagevnav = hbox(
+                    pad(("left","right"), 1em,
+                        vbox(
+                            pad(("top","bottom"),5px, node(:a, "Describe",
+                                    attributes=Dict(:href=>"../explore/describe")
+                                    )
+                                    ),
+                            pad(("top","bottom"),5px, node(:a, "moar",
+                                    attributes=Dict(:href=>"../explore/describe")
+                                    )
+                                    ),
+                            pad(("top","bottom"),5px, node(:a, "buttons",
+                                    attributes=Dict(:href=>"../explore/describe")
+                                    )
+                                    ),
+                            pad(("top","bottom"),5px, node(:a, "here",
+                                    attributes=Dict(:href=>"../explore/describe")
+                                    )
+                                    ),
+                        )
+                    ),
+                    vline()
+                    )
+
+explorepage = vbox(
+                navbar,
+                hbox(
+                    pad("right", 1em, explorepagevnav),
+                    describegenerate,
+                    describeresults
+                    )
+                )
 
 @app julex = (
             Mux.defaults,
@@ -78,9 +121,10 @@ tablepage = vbox(
             page("/table",
                 tablepage
                 ),
-            page("/explore",
-                respond("nothing here yet")),
+            page("/explore/describe",
+                explorepage,
+                ),
             Mux.notfound())
-settheme!(:nativehtml)
+#settheme!(:nativehtml)
 
 serve(julex)
